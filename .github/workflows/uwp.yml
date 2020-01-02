@@ -13,22 +13,14 @@ jobs:
       matrix:
         os: [windows-2019]
         variant: [Release]
+        arch: [arm, arm64]
     runs-on: ${{ matrix.os }}
-    name: UWP ${{ matrix.variant }} on ${{ matrix.os }}
+    name: UWP ${{ matrix.variant }} ${{ matrix.arch }} on ${{ matrix.os }}
     env:
       DEPOT_TOOLS_WIN_TOOLCHAIN: '0'
       DEPOT_TOOLS_METRICS: '0'
       PYTHON_HOME: ''
     steps:
-      - name: Discord message (1)
-        shell: pwsh
-        run: |
-          $body = @'
-          {
-            "content": "Starting ANGLE UWP ${{ matrix.variant }} job on ${{ matrix.os }}."
-          }
-          '@
-          Invoke-RestMethod -Uri ${{ secrets.DISCORD_WEBHOOK }} -ContentType "application/json" -Method Post -Body $body
       - name: Check out source
         uses: actions/checkout@v1
       - name: Fetch depot_tools
@@ -45,13 +37,13 @@ jobs:
             cd depot_tools
             ./update_depot_tools.bat
             dir
-      - name: Get Angle Sauce
+      - name: Get Angle Source
         shell: pwsh
         run: |
           del C:\ProgramData\Chocolatey\bin\pytho*.exe
           git clone https://chromium.googlesource.com/angle/angle
           cd angle
-          git apply ../patches/0001-HACK-Allow-feature-level-10.0-to-use-ES-3.0.patch
+          # git apply ../patches/0001-HACK-Allow-feature-level-10.0-to-use-ES-3.0.patch
           git apply ../patches/XXXX-Fix-UWP-build.patch
       - name: Bootstrap ${{ matrix.variant }} ANGLE UWP dependencies on ${{ matrix.os }}
         shell: pwsh
@@ -70,59 +62,32 @@ jobs:
           $env:DEPOT_TOOLS_WIN_TOOLCHAIN=0
           $env:Path = "$pwd\depot_tools;" + $env:Path
           cd angle
-          gn gen out/Build_UWP --args='is_clang=false is_debug=false angle_enable_null=false target_cpu=\"x64\" target_os=\"winuwp\" angle_is_winuwp=true'
-      - name: Discord message (2)
-        shell: pwsh
-        run: |
-          $body = @'
-          {
-            "content": "Starting ANGLE UWP ${{ matrix.variant }} build on ${{ matrix.os }}."
-          }
-          '@
-          Invoke-RestMethod -Uri ${{ secrets.DISCORD_WEBHOOK }} -ContentType "application/json" -Method Post -Body $body
+          gn gen out/Build_UWP_${{ matrix.arch }} --args='is_clang=false is_debug=false angle_enable_null=false target_cpu=\"${{ matrix.arch }}\" target_os=\"winuwp\" angle_is_winuwp=true'
       - name: Build Angle
         shell: pwsh
         run: |
           $env:Path = "$pwd\depot_tools;" + $env:Path
           &("C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat")
           cd angle
-          autoninja -C out\Build_UWP libANGLE
-          autoninja -C out\Build_UWP libEGL
-          autoninja -C out\Build_UWP libGLESv1_CM 
-          autoninja -C out\Build_UWP libGLESv2
-      - name: Discord message (3)
-        shell: pwsh
-        run: |
-          $body = @'
-          {
-            "content": "ANGLE UWP ${{ matrix.variant }} on ${{ matrix.os }} has been built!"
-          }
-          '@
-          Invoke-RestMethod -Uri ${{ secrets.DISCORD_WEBHOOK }} -ContentType "application/json" -Method Post -Body $body
+          autoninja -C out\Build_UWP_${{ matrix.arch }} libANGLE
+          autoninja -C out\Build_UWP_${{ matrix.arch }} libEGL
+          autoninja -C out\Build_UWP_${{ matrix.arch }} libGLESv1_CM 
+          autoninja -C out\Build_UWP_${{ matrix.arch }} libGLESv2
       - name: Copy Binaries
         shell: pwsh
         run: |
-          New-Item -Name "UWP" -ItemType "directory"
+          New-Item -Name "UWP_${{ matrix.arch }}" -ItemType "directory"
           New-Item -Name "lib" -ItemType "directory"
           New-Item -Name "Binaries" -ItemType "directory"
-          Copy-Item -Path "angle\out\Build_UWP\*.lib" -Destination "UWP" -Recurse
-          Copy-Item -Path "angle\out\Build_UWP\*.dll" -Destination "UWP" -Recurse
-          Copy-Item -Path "angle\out\Build_UWP\*.pdb" -Destination "UWP" -Recurse
-          Move-Item -Path "UWP" -Destination "lib"
+          Copy-Item -Path "angle\out\Build_UWP\*.lib" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Copy-Item -Path "angle\out\Build_UWP\*.dll" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Copy-Item -Path "angle\out\Build_UWP\*.pdb" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Move-Item -Path "UWP_${{ matrix.arch }}" -Destination "lib"
           Move-Item -Path "lib" -Destination "Binaries"
           Copy-Item -Path "angle\include" -Destination "Binaries" -Recurse 
           7z a ANGLE.zip Binaries\*
-      - name: Archive ${{ matrix.variant }} ANGLE UWP archive on ${{ matrix.os }}
+      - name: Archive ${{ matrix.variant }} ${{ matrix.arch }} ANGLE UWP archive on ${{ matrix.os }}
         uses: actions/upload-artifact@master
         with:
-          name: Angle UWP Libraries for ${{ matrix.variant }} on ${{ matrix.os }}
+          name: Angle UWP Libraries for ${{ matrix.variant }} ${{ matrix.arch }} on ${{ matrix.os }}
           path: Angle.zip
-      - name: Discord message (4)
-        shell: pwsh
-        run: |
-          $body = @'
-          {
-            "content": "ANGLE UWP ${{ matrix.variant }} on ${{ matrix.os }} :: Artifacts deployed!"
-          }
-          '@
-          Invoke-RestMethod -Uri ${{ secrets.DISCORD_WEBHOOK }} -ContentType "application/json" -Method Post -Body $body
