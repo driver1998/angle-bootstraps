@@ -1,15 +1,14 @@
-From d3cc1d32aa759df65076590cacc132e27700623a Mon Sep 17 00:00:00 2001
-From: Ethan Lee <flibitijibibo@gmail.com>
-Date: Fri, 27 Dec 2019 14:46:50 -0500
-Subject: [PATCH] Fix UWP build
+From 04978a08aa56e87c69c45db679d30a53fd854ae0 Mon Sep 17 00:00:00 2001
+From: GH Cao <driver1998@foxmail.com>
+Date: Fri, 3 Jan 2020 00:35:16 +0800
+Subject: [PATCH] [PATCH] Fix UWP build
 
-Change-Id: Ifcbb6fe51ee2df6baf86a308de74bab640ded834
 ---
  src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
-index 4f9e52ca3..3f86c42ba 100644
+index a5db48f53..9c9e4699d 100644
 --- a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
 @@ -2364,6 +2364,11 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
@@ -24,15 +23,15 @@ index 4f9e52ca3..3f86c42ba 100644
      IntelDriverVersion capsVersion = IntelDriverVersion(0);
      if (isIntel)
      {
-@@ -2449,7 +2454,7 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
-     // This is targeted to work around a bug in AMD D3D driver that fails to allocate
-     // ShaderResourceView for StructuredBuffer.
+@@ -2448,7 +2453,7 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
+     // Don't translate uniform block to StructuredBuffer on Windows 7 and earlier. This is targeted
+     // to work around a bug that fails to allocate ShaderResourceView for StructuredBuffer.
      ANGLE_FEATURE_CONDITION(features, dontTranslateUniformBlockToStructuredBuffer,
--                            isAMD && !IsWindows10OrGreater());
-+                            isAMD && !isWin10);
+-                            !IsWindows10OrGreater());
++                            !isWin10);
  
      // Call platform hooks for testing overrides.
      auto *platform = ANGLEPlatformCurrent();
 -- 
-2.21.0
+2.17.1
 
