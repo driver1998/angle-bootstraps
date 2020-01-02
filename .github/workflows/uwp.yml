@@ -79,9 +79,9 @@ jobs:
           New-Item -Name "UWP_${{ matrix.arch }}" -ItemType "directory"
           New-Item -Name "lib" -ItemType "directory"
           New-Item -Name "Binaries" -ItemType "directory"
-          Copy-Item -Path "angle\out\Build_UWP\*.lib" -Destination "UWP_${{ matrix.arch }}" -Recurse
-          Copy-Item -Path "angle\out\Build_UWP\*.dll" -Destination "UWP_${{ matrix.arch }}" -Recurse
-          Copy-Item -Path "angle\out\Build_UWP\*.pdb" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Copy-Item -Path "angle\out\Build_UWP_${{ matrix.arch }}\*.lib" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Copy-Item -Path "angle\out\Build_UWP_${{ matrix.arch }}\*.dll" -Destination "UWP_${{ matrix.arch }}" -Recurse
+          Copy-Item -Path "angle\out\Build_UWP_${{ matrix.arch }}\*.pdb" -Destination "UWP_${{ matrix.arch }}" -Recurse
           Move-Item -Path "UWP_${{ matrix.arch }}" -Destination "lib"
           Move-Item -Path "lib" -Destination "Binaries"
           Copy-Item -Path "angle\include" -Destination "Binaries" -Recurse 
